@@ -1,4 +1,7 @@
+// Licensed under the MIT License.
+
 /* eslint-disable no-unused-expressions */
+
 import { expect } from 'chai';
 import * as cards from '../lib/cards.mjs';
 import os from 'os';

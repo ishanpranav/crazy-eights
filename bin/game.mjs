@@ -1,3 +1,5 @@
-// game.mjs
+// cards.mjs
+// Copyright (c) 2024 Ishan Pranav
+// Licensed under the MIT License.
 
 console.log(12004);

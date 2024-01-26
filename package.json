@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npx mocha test/test-cards.mjs",
     "lint": "npx eslint bin/*.mjs --fix && npx eslint lib/*.mjs --fix"
   },
   "repository": {
