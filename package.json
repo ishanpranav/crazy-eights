@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx eslint bin/*.mjs --fix && npx eslint lib/*.mjs --fix"
   },
   "repository": {
     "type": "git",

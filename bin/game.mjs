@@ -1,3 +1,3 @@
 // game.mjs
 
-console.log(12004)
+console.log(12004);
