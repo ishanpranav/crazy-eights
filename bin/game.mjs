@@ -3,11 +3,19 @@
 // Licensed under the MIT License.
 
 import { readFile } from 'fs';
-import { playerAgent } from '../bin/player-agent.mjs';
 import {
     deal, draw, drawUntilPlayable, eight, generateDeck, matchesAnyProperty,
 } from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
+
+import { playerAgent } from '../bin/player-agent.mjs';
+import { lazyAgent } from '../lib/lazy-agent.mjs';
+
+// Plays a full game, not just two turns
+
+// Use `computerAgent` to control the AI behavior
+
+const computerAgent = lazyAgent;
 
 function createDefaultState() {
     const result = {
@@ -29,7 +37,7 @@ function createDefaultState() {
         }
 
         [result.deck, [result.nextPlay, ...discarded]] = draw(result.deck);
-        discarded = [...result.discardPile, ...discarded];
+        result.discardPile = [...result.discardPile, ...discarded];
     } while (result.nextPlay.rank === eight);
 
     return result;
@@ -41,45 +49,69 @@ function isGameOver(state) {
         !state.deck.length;
 }
 
-function playCrazyEights(state) {
-    const agents = [playerAgent];
+function playTurn(state, agent, witness, hand) {
+    agent.onReady(state);
+    
+    const matches = [];
 
+    for (const card of hand) {
+        if (matchesAnyProperty(card, state.nextPlay)) {
+            matches.push(card);
+        }
+    }
+
+    let drawn;
+    let played;
+    let changedSuit;
+    
+    if (matches.length) {
+        played = agent.onPlay(matches);
+    } else {
+        const partition = drawUntilPlayable(state.deck, state.nextPlay);
+
+        [state.deck, drawn] = partition;
+        hand = [...hand, ...drawn];
+        played = drawn[drawn.length - 1];
+
+        agent.onDraw(drawn, played);
+    }
+
+    if (!played) {
+        state.deck = []; // Unresponsive AI or not enough cards
+
+        return hand;
+    }
+
+    if (played.rank === eight) {
+        changedSuit = agent.onChangeSuit();
+    }
+
+    hand.splice(hand.indexOf(played), 1);
+    state.discardPile.push(state.nextPlay);
+
+    state.nextPlay = played;
+    
+    witness.onWitness(drawn, played, changedSuit);
+
+    if (played.rank === eight) {
+        played.suit = changedSuit; // Bad hack
+    }
+
+    return hand;
+}
+
+function playGame(state) {
     while (!isGameOver(state)) {
-        const matches = [];
-
-        for (const card of state.playerHand) {
-            if (matchesAnyProperty(card, state.nextPlay)) {
-                matches.push(card);
-            }
-        }
-
-        for (const agent of agents) {
-            agent.onReady(state);
-
-            let played;
-
-            if (matches.length) {
-                played = agent.onPlay(matches, state);
-            } else {
-                let drawn;
-                const partition = drawUntilPlayable(state.deck, state.nextPlay);
-
-                [state.deck, drawn] = partition;
-                state.playerHand = [...state.playerHand, ...drawn];
-                played = drawn[drawn.length - 1];
-
-                agent.onDraw(drawn, played, state);
-            }
-
-            if (played.rank === eight) {
-                played.suit = agent.onChangeSuit(state);
-            }
-
-            state.playerHand.splice(state.playerHand.indexOf(played), 1);
-            state.discardPile.push(state.nextPlay);
-
-            state.nextPlay = played;
-        }
+        state.playerHand = playTurn(
+            state, 
+            playerAgent, 
+            computerAgent,
+            state.playerHand);
+        state.computerHand = playTurn(
+            state,
+            computerAgent,
+            playerAgent,
+            state.computerHand);
     }
 
     for (const agent of agents) {
@@ -94,15 +126,13 @@ function main() {
                 throw err;
             }
 
-            playCrazyEights(JSON.parse(data));
+            playGame(JSON.parse(data));
         });
 
         return;
     }
 
-    playCrazyEights(createDefaultState());
+    playGame(createDefaultState());
 }
 
 main();
-
-console.log(12004);

@@ -14,23 +14,48 @@ function topOfDiscardPile(state) {
     return state.discardPile[state.discardPile.length - 1];
 }
 
+function displayState(state) {
+    let nextPlayString;
+
+    if (state.nextPlay.rank === eight) {
+        nextPlayString = state.nextPlay.suit;
+    } else {
+        nextPlayString = cardToString(state.nextPlay);
+    }
+
+    clear();
+    console.log(`
+                        CR🤪ZY 8's
+    -----------------------------------------------
+    Next suit/rank to play: ➡️  ${nextPlayString}  ⬅️
+    -----------------------------------------------
+    Top of discard pile: ${cardToString(topOfDiscardPile(state))}
+    Number of cards left in deck:`, state.deck.length);
+        console.log(`    -----------------------------------------------
+    🤖✋ (computer hand): ${handToString(state.computerHand)}
+    😊✋ (player hand): ${handToString(state.playerHand)}
+    -----------------------------------------------
+`);
+}
+
+/**
+ * Implements the agent behavior for the player. This object handles all
+ * user-interface features.
+ * 
+ * `onReady`: called at the beginning of the agent's turn.
+ * `onPlay`: called when the agent has a matching card and must play.
+ * `onChangeSuit`: called when the agent has played an eight and must choose its
+ *                 suit.
+ * `onDraw`: called after the agent has drawn.
+ * `onWitness`: called after any other agent has played a turn.
+ * `onGameOver`: called when the game is over.
+ */
 export const playerAgent = {
     onReady: (state) => {
         playerAgent.state = state;
-        
-        clear();
-        console.log(`
-                        CR🤪ZY 8's
-    -----------------------------------------------
-    Next suit/rank to play: ➡️  ${cardToString(playerAgent.state.nextPlay)}  ⬅️
-    -----------------------------------------------
-    Top of discard pile: ${cardToString(topOfDiscardPile(playerAgent.state))}
-    Number of cards left in deck: ${playerAgent.state.deck.length}
-    -----------------------------------------------
-    🤖✋ (computer hand): ${handToString(playerAgent.state.computerHand)}
-    😊✋ (player hand): ${handToString(playerAgent.state.playerHand)}
-    -----------------------------------------------
-    😊 Player's turn...`);
+
+        displayState(state);
+        console.log("    😊 Player's turn...");
     },
     onPlay: (matches) => {
         let input;
@@ -44,6 +69,8 @@ export const playerAgent = {
 
             input = Number(question("   >"));
         } while (isNaN(input) || input < 1 || input > matches.length);
+
+        console.log("    Player played", cardToString(matches[input - 1]));
 
         return matches[input - 1];
     },
@@ -65,7 +92,7 @@ export const playerAgent = {
     },
     onDraw: (drawn, played) => {
         const possibilities = [
-            playerAgent.state.nextPlay.rank, 
+            playerAgent.state.nextPlay.rank,
             playerAgent.state.nextPlay.suit
         ];
 
@@ -83,6 +110,25 @@ export const playerAgent = {
     Card played: ${cardToString(played)}
     Press ENTER to continue
         `);
+        question("    ");
+    },
+    onWitness: (drawn, played, changedSuit) => {
+        displayState(playerAgent.state);
+        console.log(`    
+    🤖 Computers's turn...
+    `);
+
+        if (drawn) {
+            console.log("    Computer had to draw", handToString(drawn));
+        }
+
+        console.log("    Computer played", cardToString(played));
+
+        if (changedSuit) {
+            console.log("    Computer changed the suit to", changedSuit);
+        }
+
+        console.log("    Press ENTER to continue");
         question("    ");
     },
     onGameOver: () => {
@@ -106,6 +152,6 @@ export const playerAgent = {
             return;
         }
 
-        console.log("    It's a draw!");
+        console.log("    It's a tie!");
     }
 };
