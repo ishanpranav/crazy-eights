@@ -10,12 +10,16 @@ import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
 import { playerAgent } from '../bin/player-agent.mjs';
 // import { lazyAgent } from '../lib/lazy-agent.mjs';
-import { randomAgent } from '../lib/random-agent.mjs';
+// import { randomAgent } from '../lib/random-agent.mjs';
+import { cleverAgent } from '../lib/clever-agent.mjs';
 
 // Plays a full game, not just two turns
-// Use `computerAgent` to control the AI behavior
 
-const computerAgent = randomAgent;
+// Use `computerAgent` to control the AI behavior
+// Clever is highly aggressive, counts cards, peeks at the deck and looks in
+// your hand to cheat
+
+const computerAgent = cleverAgent;
 
 function createDefaultState() {
     const result = {
@@ -102,12 +106,21 @@ function playTurn(state, agent, witness, hand) {
 }
 
 function playGame(state) {
-    while (!isGameOver(state)) {
+    for (;;) {
+        if (isGameOver(state)) {
+            break;
+        }
+
         state.playerHand = playTurn(
             state,
             playerAgent,
             computerAgent,
             state.playerHand);
+
+        if (isGameOver(state)) {
+            break;
+        }
+
         state.computerHand = playTurn(
             state,
             computerAgent,
