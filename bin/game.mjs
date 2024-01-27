@@ -5,7 +5,9 @@
 import clear from 'clear';
 import { readFile } from 'fs';
 import { question } from 'readline-sync';
-import { deal, draw, eight, generateDeck } from '../lib/cards.mjs';
+import { 
+    cardToString, deal, draw, eight, generateDeck, handToString 
+} from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
 function createDefaultState() {
@@ -35,8 +37,30 @@ function createDefaultState() {
     return result;
 }
 
+function topOfDiscard(state) {
+    if (state.discard.length == 0) {
+        return null;
+    }
+
+    return state.discard[state.discard.length - 1];
+}
+
+function displayState(state) {
+    console.log(`
+                      CR🤪ZY 8's
+    -----------------------------------------------
+    Next suit/rank to play: ➡️  ${cardToString(state.nextPlay)}  ⬅️
+    -----------------------------------------------
+    Top of discard pile: ${cardToString(topOfDiscard(state))}
+    Number of cards left in deck: ${state.deck.length}
+    -----------------------------------------------
+    🤖✋ (computer hand): ${handToString(state.computerHand)}
+    😊✋ (player hand): ${handToString(state.playerHand)}
+    -----------------------------------------------`);
+}
+
 function playCrazyEights(state) {
-    console.log(state);
+    displayState(state);
 }
 
 if (process.argv.length > 2) {
