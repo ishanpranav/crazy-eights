@@ -6,8 +6,8 @@ import clear from 'clear';
 import { readFile } from 'fs';
 import { question } from 'readline-sync';
 import {
-    cardToString, deal, draw, eight, generateDeck, handToString,
-    matchesAnyProperty
+    cardToString, deal, draw, drawUntilPlayable, eight, generateDeck,
+    handToString, matchesAnyProperty
 } from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
@@ -31,15 +31,14 @@ function createDefaultState() {
         }
 
         [result.deck, [result.nextPlay, ...discarded]] = draw(result.deck);
-
-        result.discardPile.concat(discarded);
+        discarded = [...result.discardPile, ...discarded];
     } while (result.nextPlay.rank === eight);
 
     return result;
 }
 
 function topOfDiscardPile(state) {
-    if (state.discardPile.length == 0) {
+    if (!state.discardPile.length) {
         return null;
     }
 
@@ -47,6 +46,7 @@ function topOfDiscardPile(state) {
 }
 
 function displayState(state) {
+    clear();
     console.log(`
                       CR🤪ZY 8's
     -----------------------------------------------
@@ -60,12 +60,11 @@ function displayState(state) {
     -----------------------------------------------`);
 }
 
-function requestCard(matches) {
+function requestPlayExistingCard(matches) {
     let input;
 
     do {
         console.log(`
-    😊 Player's turn...
     Enter the number of the card you would like to
     play
     
@@ -75,6 +74,34 @@ function requestCard(matches) {
     } while (isNaN(input) || input < 1 || input > matches.length);
 
     return matches[input - 1];
+}
+
+function requestPlayDrawnCard(state) {
+    const possibilities = [state.nextPlay.rank, state.nextPlay.suit];
+
+    if (state.nextPlay.rank !== eight) {
+        possibilities.push(eight);
+    }
+
+    console.log(`
+    😔 You have no playable cards
+    Press ENTER to draw cards until matching:
+    ${possibilities.join(", ")}`);
+    question("    ");
+
+    let drawn;
+
+    [state.deck, drawn] = drawUntilPlayable(state.deck, state.nextPlay);
+    state.playerHand = [...state.playerHand, ...drawn];
+    
+    console.log(`
+    Cards drawn: ${handToString(drawn)}
+    Card played: ${cardToString(drawn[drawn.length - 1])}
+    Press ENTER to continue
+    `);
+    question("    ");
+
+    return drawn[drawn.length - 1];
 }
 
 function playCrazyEights(state) {
@@ -88,17 +115,21 @@ function playCrazyEights(state) {
         }
     }
 
-    if (matches.length == 0) {
-        return;
+    console.log("    😊 Player's turn...");
+
+    let card;
+
+    if (matches.length) {
+        card = requestPlayExistingCard(matches);
+    } else {
+        card = requestPlayDrawnCard(state);
     }
-
-    const card = requestCard(matches);
-
+    
     state.playerHand.splice(state.playerHand.indexOf(card), 1);
     state.discardPile.push(state.nextPlay);
 
     state.nextPlay = card;
-    
+
     console.log(state)
 }
 
