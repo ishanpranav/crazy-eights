@@ -12,7 +12,6 @@ import { playerAgent } from '../bin/player-agent.mjs';
 import { lazyAgent } from '../lib/lazy-agent.mjs';
 
 // Plays a full game, not just two turns
-
 // Use `computerAgent` to control the AI behavior
 
 const computerAgent = lazyAgent;
@@ -51,7 +50,7 @@ function isGameOver(state) {
 
 function playTurn(state, agent, witness, hand) {
     agent.onReady(state);
-    
+
     const matches = [];
 
     for (const card of hand) {
@@ -63,7 +62,7 @@ function playTurn(state, agent, witness, hand) {
     let drawn;
     let played;
     let changedSuit;
-    
+
     if (matches.length) {
         played = agent.onPlay(matches);
     } else {
@@ -90,7 +89,7 @@ function playTurn(state, agent, witness, hand) {
     state.discardPile.push(state.nextPlay);
 
     state.nextPlay = played;
-    
+
     witness.onWitness(drawn, played, changedSuit);
 
     if (played.rank === eight) {
@@ -103,8 +102,8 @@ function playTurn(state, agent, witness, hand) {
 function playGame(state) {
     while (!isGameOver(state)) {
         state.playerHand = playTurn(
-            state, 
-            playerAgent, 
+            state,
+            playerAgent,
             computerAgent,
             state.playerHand);
         state.computerHand = playTurn(
@@ -114,9 +113,8 @@ function playGame(state) {
             state.computerHand);
     }
 
-    for (const agent of agents) {
-        agent.onGameOver(state);
-    }
+    playerAgent.onGameOver(state);
+    computerAgent.onGameOver(state);
 }
 
 function main() {

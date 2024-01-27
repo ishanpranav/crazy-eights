@@ -31,7 +31,7 @@ function displayState(state) {
     -----------------------------------------------
     Top of discard pile: ${cardToString(topOfDiscardPile(state))}
     Number of cards left in deck:`, state.deck.length);
-        console.log(`    -----------------------------------------------
+    console.log(`    -----------------------------------------------
     🤖✋ (computer hand): ${handToString(state.computerHand)}
     😊✋ (player hand): ${handToString(state.playerHand)}
     -----------------------------------------------
