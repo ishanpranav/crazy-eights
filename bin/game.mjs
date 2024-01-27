@@ -9,12 +9,13 @@ import {
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
 import { playerAgent } from '../bin/player-agent.mjs';
-import { lazyAgent } from '../lib/lazy-agent.mjs';
+// import { lazyAgent } from '../lib/lazy-agent.mjs';
+import { randomAgent } from '../lib/random-agent.mjs';
 
 // Plays a full game, not just two turns
 // Use `computerAgent` to control the AI behavior
 
-const computerAgent = lazyAgent;
+const computerAgent = randomAgent;
 
 function createDefaultState() {
     const result = {
@@ -50,6 +51,7 @@ function isGameOver(state) {
 
 function playTurn(state, agent, witness, hand) {
     agent.onReady(state);
+    witness.onBeforeWitness();
 
     const matches = [];
 
@@ -113,8 +115,8 @@ function playGame(state) {
             state.computerHand);
     }
 
-    playerAgent.onGameOver(state);
-    computerAgent.onGameOver(state);
+    playerAgent.onGameOver();
+    computerAgent.onGameOver();
 }
 
 function main() {

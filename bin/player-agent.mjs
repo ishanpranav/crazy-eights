@@ -47,6 +47,7 @@ function displayState(state) {
  * `onChangeSuit`: called when the agent has played an eight and must choose its
  *                 suit.
  * `onDraw`: called after the agent has drawn.
+ * `onBeforeWitness`: called before any other agent plays a turn.
  * `onWitness`: called after any other agent has played a turn.
  * `onGameOver`: called when the game is over.
  */
@@ -112,8 +113,10 @@ export const playerAgent = {
         `);
         question("    ");
     },
-    onWitness: (drawn, played, changedSuit) => {
+    onBeforeWitness: () => {
         displayState(playerAgent.state);
+    },
+    onWitness: (drawn, played, changedSuit) => {
         console.log(`    
     🤖 Computers's turn...
     `);
