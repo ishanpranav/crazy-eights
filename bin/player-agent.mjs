@@ -16,21 +16,23 @@ function topOfDiscardPile(state) {
 
 export const playerAgent = {
     onReady: (state) => {
+        playerAgent.state = state;
+        
         clear();
         console.log(`
                         CR🤪ZY 8's
     -----------------------------------------------
-    Next suit/rank to play: ➡️  ${cardToString(state.nextPlay)}  ⬅️
+    Next suit/rank to play: ➡️  ${cardToString(playerAgent.state.nextPlay)}  ⬅️
     -----------------------------------------------
-    Top of discard pile: ${cardToString(topOfDiscardPile(state))}
-    Number of cards left in deck: ${state.deck.length}
+    Top of discard pile: ${cardToString(topOfDiscardPile(playerAgent.state))}
+    Number of cards left in deck: ${playerAgent.state.deck.length}
     -----------------------------------------------
-    🤖✋ (computer hand): ${handToString(state.computerHand)}
-    😊✋ (player hand): ${handToString(state.playerHand)}
+    🤖✋ (computer hand): ${handToString(playerAgent.state.computerHand)}
+    😊✋ (player hand): ${handToString(playerAgent.state.playerHand)}
     -----------------------------------------------
     😊 Player's turn...`);
     },
-    onPlay: (matches, state) => {
+    onPlay: (matches) => {
         let input;
 
         do {
@@ -45,7 +47,7 @@ export const playerAgent = {
 
         return matches[input - 1];
     },
-    onChangeSuit: (state) => {
+    onChangeSuit: () => {
         let input;
 
         do {
@@ -61,10 +63,13 @@ export const playerAgent = {
 
         return suits[input - 1];
     },
-    onDraw: (drawn, played, state) => {
-        const possibilities = [state.nextPlay.rank, state.nextPlay.suit];
+    onDraw: (drawn, played) => {
+        const possibilities = [
+            playerAgent.state.nextPlay.rank, 
+            playerAgent.state.nextPlay.suit
+        ];
 
-        if (state.nextPlay.rank !== eight) {
+        if (playerAgent.state.nextPlay.rank !== eight) {
             possibilities.push(eight);
         }
 
@@ -80,7 +85,9 @@ export const playerAgent = {
         `);
         question("    ");
     },
-    onGameOver: state => {
+    onGameOver: () => {
+        const state = playerAgent.state;
+
         if (!state.deck.length) {
             console.log("    The deck is out of cards!");
         }

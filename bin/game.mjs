@@ -10,7 +10,7 @@ import {
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
 function createDefaultState() {
-    let result = {
+    const result = {
         deck: generateDeck(),
         discardPile: []
     };
@@ -35,7 +35,7 @@ function createDefaultState() {
     return result;
 }
 
-function gameTerminated(state) {
+function isGameOver(state) {
     return !state.playerHand.length ||
         !state.computerHand.length ||
         !state.deck.length;
@@ -44,7 +44,7 @@ function gameTerminated(state) {
 function playCrazyEights(state) {
     const agents = [playerAgent];
 
-    while (!gameTerminated(state)) {
+    while (!isGameOver(state)) {
         const matches = [];
 
         for (const card of state.playerHand) {
@@ -62,8 +62,9 @@ function playCrazyEights(state) {
                 played = agent.onPlay(matches, state);
             } else {
                 let drawn;
-            
-                [state.deck, drawn] = drawUntilPlayable(state.deck, state.nextPlay);
+                const partition = drawUntilPlayable(state.deck, state.nextPlay);
+
+                [state.deck, drawn] = partition;
                 state.playerHand = [...state.playerHand, ...drawn];
                 played = drawn[drawn.length - 1];
 
