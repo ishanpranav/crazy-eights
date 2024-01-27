@@ -2,12 +2,10 @@
 // Copyright (c) 2024 Ishan Pranav
 // Licensed under the MIT License.
 
-import clear from 'clear';
 import { readFile } from 'fs';
-import { question } from 'readline-sync';
+import { playerAgent } from '../bin/player-agent.mjs';
 import {
-    cardToString, deal, draw, drawUntilPlayable, eight, generateDeck,
-    handToString, matchesAnyProperty, suits
+    deal, draw, drawUntilPlayable, eight, generateDeck, matchesAnyProperty,
 } from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
@@ -37,100 +35,16 @@ function createDefaultState() {
     return result;
 }
 
-function topOfDiscardPile(state) {
-    if (!state.discardPile.length) {
-        return null;
-    }
-
-    return state.discardPile[state.discardPile.length - 1];
-}
-
-function displayState(state) {
-    console.log(`
-                      CR🤪ZY 8's
-    -----------------------------------------------
-    Next suit/rank to play: ➡️  ${cardToString(state.nextPlay)}  ⬅️
-    -----------------------------------------------
-    Top of discard pile: ${cardToString(topOfDiscardPile(state))}
-    Number of cards left in deck: ${state.deck.length}
-    -----------------------------------------------
-    🤖✋ (computer hand): ${handToString(state.computerHand)}
-    😊✋ (player hand): ${handToString(state.playerHand)}
-    -----------------------------------------------`);
-}
-
-function requestPlayExistingCard(matches) {
-    let input;
-
-    do {
-        console.log(`
-    Enter the number of the card you would like to
-    play
-    
-    `, handToString(matches, "\n     ", true), '\n');
-
-        input = Number(question("    >"));
-    } while (isNaN(input) || input < 1 || input > matches.length);
-
-    return matches[input - 1];
-}
-
-function requestPlayDrawnCard(state) {
-    const possibilities = [state.nextPlay.rank, state.nextPlay.suit];
-
-    if (state.nextPlay.rank !== eight) {
-        possibilities.push(eight);
-    }
-
-    console.log(`
-    😔 You have no playable cards
-    Press ENTER to draw cards until matching:
-    ${possibilities.join(", ")}`);
-    question("    ");
-
-    let drawn;
-
-    [state.deck, drawn] = drawUntilPlayable(state.deck, state.nextPlay);
-    state.playerHand = [...state.playerHand, ...drawn];
-
-    console.log(`
-    Cards drawn: ${handToString(drawn)}
-    Card played: ${cardToString(drawn[drawn.length - 1])}
-    Press ENTER to continue
-    `);
-    question("    ");
-
-    return drawn[drawn.length - 1];
-}
-
-function requestSuit() {
-    let input;
-
-    do {
-        console.log(`
-    CRAZY EIGHTS! You played an 8 - choose a suit
-    1: ♠️
-    2: ❤️
-    3: ♣️
-    4: ♦️`);
-
-        input = question("    >");
-    } while (isNaN(input) || input < 1 || input > suits.length);
-
-    return suits[input - 1];
-}
-
 function gameTerminated(state) {
-    return !state.playerHand.length || 
-           !state.computerHand.length || 
-           !state.deck.length;
+    return !state.playerHand.length ||
+        !state.computerHand.length ||
+        !state.deck.length;
 }
 
 function playCrazyEights(state) {
-    while (!gameTerminated(state)) {
-        clear();
-        displayState(state);
+    const agents = [playerAgent];
 
+    while (!gameTerminated(state)) {
         const matches = [];
 
         for (const card of state.playerHand) {
@@ -139,45 +53,37 @@ function playCrazyEights(state) {
             }
         }
 
-        console.log("    😊 Player's turn...");
+        for (const agent of agents) {
+            agent.onReady(state);
 
-        let card;
+            let played;
 
-        if (matches.length) {
-            card = requestPlayExistingCard(matches);
-        } else {
-            card = requestPlayDrawnCard(state);
+            if (matches.length) {
+                played = agent.onPlay(matches, state);
+            } else {
+                let drawn;
+            
+                [state.deck, drawn] = drawUntilPlayable(state.deck, state.nextPlay);
+                state.playerHand = [...state.playerHand, ...drawn];
+                played = drawn[drawn.length - 1];
+
+                agent.onDraw(drawn, played, state);
+            }
+
+            if (played.rank === eight) {
+                played.suit = agent.onChangeSuit(state);
+            }
+
+            state.playerHand.splice(state.playerHand.indexOf(played), 1);
+            state.discardPile.push(state.nextPlay);
+
+            state.nextPlay = played;
         }
-
-        if (card.rank === eight) {
-            card.suit = requestSuit();
-        }
-
-        state.playerHand.splice(state.playerHand.indexOf(card), 1);
-        state.discardPile.push(state.nextPlay);
-
-        state.nextPlay = card;
     }
 
-    if (!state.deck.length) {
-        console.log("    The deck is out of cards!");
+    for (const agent of agents) {
+        agent.onGameOver(state);
     }
-
-    console.log("    GAME OVER...");
-
-    if (state.playerHand.length < state.computerHand.length) {
-        console.log("    Player is the winner!");
-
-        return;
-    }
-    
-    if (state.computerHand.length < state.playerHand.length) {
-        console.log("    Computer is the winner!");
-
-        return;
-    }
-
-    console.log("    It's a draw!");
 }
 
 function main() {
