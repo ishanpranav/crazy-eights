@@ -7,7 +7,7 @@ import { readFile } from 'fs';
 import { question } from 'readline-sync';
 import {
     cardToString, deal, draw, drawUntilPlayable, eight, generateDeck,
-    handToString, matchesAnyProperty
+    handToString, matchesAnyProperty, suits
 } from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
@@ -93,7 +93,7 @@ function requestPlayDrawnCard(state) {
 
     [state.deck, drawn] = drawUntilPlayable(state.deck, state.nextPlay);
     state.playerHand = [...state.playerHand, ...drawn];
-    
+
     console.log(`
     Cards drawn: ${handToString(drawn)}
     Card played: ${cardToString(drawn[drawn.length - 1])}
@@ -102,6 +102,23 @@ function requestPlayDrawnCard(state) {
     question("    ");
 
     return drawn[drawn.length - 1];
+}
+
+function requestSuit() {
+    let input;
+
+    do {
+        console.log(`
+    CRAZY EIGHTS! You played an 8 - choose a suit
+    1: ♠️
+    2: ❤️
+    3: ♣️
+    4: ♦️`);
+
+        input = question("    >");
+    } while (isNaN(input) || input < 1 || input > suits.length);
+
+    return suits[input - 1];
 }
 
 function playCrazyEights(state) {
@@ -124,13 +141,15 @@ function playCrazyEights(state) {
     } else {
         card = requestPlayDrawnCard(state);
     }
-    
+
+    if (card.rank === eight) {
+        card.suit = requestSuit();
+    }
+
     state.playerHand.splice(state.playerHand.indexOf(card), 1);
     state.discardPile.push(state.nextPlay);
 
     state.nextPlay = card;
-
-    console.log(state)
 }
 
 function main() {
