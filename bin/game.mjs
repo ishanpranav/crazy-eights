@@ -95,7 +95,11 @@ function playCrazyEights(state) {
     const card = requestCard(matches);
 
     state.playerHand.splice(state.playerHand.indexOf(card), 1);
-    state.discardPile.push(card);
+    state.discardPile.push(state.nextPlay);
+
+    state.nextPlay = card;
+    
+    console.log(state)
 }
 
 function main() {
