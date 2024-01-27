@@ -46,7 +46,6 @@ function topOfDiscardPile(state) {
 }
 
 function displayState(state) {
-    clear();
     console.log(`
                       CR🤪ZY 8's
     -----------------------------------------------
@@ -121,35 +120,64 @@ function requestSuit() {
     return suits[input - 1];
 }
 
+function gameTerminated(state) {
+    return !state.playerHand.length || 
+           !state.computerHand.length || 
+           !state.deck.length;
+}
+
 function playCrazyEights(state) {
-    displayState(state);
+    while (!gameTerminated(state)) {
+        clear();
+        displayState(state);
 
-    const matches = [];
+        const matches = [];
 
-    for (const card of state.playerHand) {
-        if (matchesAnyProperty(card, state.nextPlay)) {
-            matches.push(card);
+        for (const card of state.playerHand) {
+            if (matchesAnyProperty(card, state.nextPlay)) {
+                matches.push(card);
+            }
         }
+
+        console.log("    😊 Player's turn...");
+
+        let card;
+
+        if (matches.length) {
+            card = requestPlayExistingCard(matches);
+        } else {
+            card = requestPlayDrawnCard(state);
+        }
+
+        if (card.rank === eight) {
+            card.suit = requestSuit();
+        }
+
+        state.playerHand.splice(state.playerHand.indexOf(card), 1);
+        state.discardPile.push(state.nextPlay);
+
+        state.nextPlay = card;
     }
 
-    console.log("    😊 Player's turn...");
-
-    let card;
-
-    if (matches.length) {
-        card = requestPlayExistingCard(matches);
-    } else {
-        card = requestPlayDrawnCard(state);
+    if (!state.deck.length) {
+        console.log("    The deck is out of cards!");
     }
 
-    if (card.rank === eight) {
-        card.suit = requestSuit();
+    console.log("    GAME OVER...");
+
+    if (state.playerHand.length < state.computerHand.length) {
+        console.log("    Player is the winner!");
+
+        return;
+    }
+    
+    if (state.computerHand.length < state.playerHand.length) {
+        console.log("    Computer is the winner!");
+
+        return;
     }
 
-    state.playerHand.splice(state.playerHand.indexOf(card), 1);
-    state.discardPile.push(state.nextPlay);
-
-    state.nextPlay = card;
+    console.log("    It's a draw!");
 }
 
 function main() {
