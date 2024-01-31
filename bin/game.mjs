@@ -4,7 +4,7 @@
 
 import { readFile } from 'fs';
 import {
-    deal, draw, drawUntilPlayable, eight, generateDeck, matchesAnyProperty,
+    deal, draw, drawUntilPlayable, eight, generateDeck, matchesAnyProperty
 } from '../lib/cards.mjs';
 import { fisherYatesShuffle } from '../lib/fisher-yates-shuffle.mjs';
 
@@ -54,7 +54,7 @@ function isGameOver(state) {
 }
 
 function playTurn(state, agent, witness, hand) {
-    agent.onReady(state);
+    agent.onReady();
     witness.onBeforeWitness();
 
     const matches = [];
@@ -106,6 +106,9 @@ function playTurn(state, agent, witness, hand) {
 }
 
 function playGame(state) {
+    playerAgent.state = state;
+    computerAgent.state = state;
+
     for (;;) {
         if (isGameOver(state)) {
             break;

@@ -52,10 +52,8 @@ function displayState(state) {
  * `onGameOver`: called when the game is over.
  */
 export const playerAgent = {
-    onReady: (state) => {
-        playerAgent.state = state;
-
-        displayState(state);
+    onReady: () => {
+        displayState(playerAgent.state);
         console.log("    😊 Player's turn...");
     },
     onPlay: (matches) => {
