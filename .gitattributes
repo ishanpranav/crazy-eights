@@ -1,3 +1,4 @@
 # Licensed under the MIT License.
 
 test/ linguist-vendored
+.eslintrc.cjs linguist-generated
